@@ -58,7 +58,6 @@ def calc_average_parallel(infile = None, nprocs = 1):
                          callback=collect_result)
     pool.close()
     pool.join()
-    print(results)
     final = np.vstack(results)
     return final
 
