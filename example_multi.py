@@ -23,10 +23,11 @@ def writeCube(cube = None, outfile = None):
 
 def averageCube(infile = None, row=0):
     hf = h5py.File(infile, 'r')
-    data = np.array(hf.get('dataset')[:,:,row])
+    data = np.array(hf.get('dataset')[row])
     a = np.average(data)
     hf.close()
     del data
+#    return row, a
     return a
 
 def calc_average_parallel(infile = None, nprocs = 1):
@@ -86,4 +87,6 @@ if __name__ == "__main__":
         writeCube(cube, options.filename)
     else:
         a = calc_average_parallel(infile = options.filename, nprocs = cores)
+#        a = a[a[:,0].argsort()]
+#        np.savetxt("results.txt", a[:,1])
         np.savetxt("results.txt", a)
