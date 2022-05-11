@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 import sys
 import multiprocessing as mp
+import pandas as pd
 
 # Useful h5py examples here:
 # https://www.christopherlovell.co.uk/blog/2016/04/27/h5py-intro.html
@@ -27,7 +28,14 @@ def averageCube(infile = None, row=0):
     a = np.average(data)
     hf.close()
     del data
-#    return row, a
+    return a
+
+def stdCube(infile = None, row=0):
+    hf = h5py.File(infile, 'r')
+    data = np.array(hf.get('dataset')[row])
+    a = np.std(data)
+    hf.close()
+    del data
     return a
 
 def calc_average_parallel(infile = None, nprocs = 1):
@@ -62,6 +70,38 @@ def calc_average_parallel(infile = None, nprocs = 1):
     final = np.vstack(results)
     return final
 
+def calc_std_parallel(infile = None, nprocs = 1):
+    ''' Average 2D slices using parallel processing
+    parameters
+    ----------
+    filename : str
+        The filename of the table to be read
+    nprocs : int
+        Number of processes to use simultaneously
+    return
+    ------
+        An array of averages, not necessarily in the same order as the input!
+    '''
+    results = []
+
+    def collect_result(result):
+        results.append(result)
+
+    hf = h5py.File(infile, 'r')
+    data = hf.get('dataset')
+    n = data.shape[0]
+    hf.close()
+    pool = mp.Pool(nprocs)
+    for i in range(n):
+        pool.apply_async(stdCube,
+                         args=[infile],
+                         kwds={'row':i},
+                         callback=collect_result)
+    pool.close()
+    pool.join()
+    final = np.vstack(results)
+    return final
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group1 = parser.add_argument_group("Global options")
@@ -87,6 +127,6 @@ if __name__ == "__main__":
         writeCube(cube, options.filename)
     else:
         a = calc_average_parallel(infile = options.filename, nprocs = cores)
-#        a = a[a[:,0].argsort()]
-#        np.savetxt("results.txt", a[:,1])
-        np.savetxt("results.txt", a)
+        b = calc_std_parallel(infile = options.filename, nprocs = cores)
+        c = np.hstack([a,b])
+        np.savetxt("results.txt", c)
