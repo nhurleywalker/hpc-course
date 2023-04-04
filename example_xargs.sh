@@ -17,6 +17,7 @@ fi
 
 # As an argument
 echo 'n=$1; echo $((n * n))' > square.sh
+chmod +x square.sh
 
 # See how long that takes without parallelisation
 
