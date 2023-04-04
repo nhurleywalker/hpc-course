@@ -16,6 +16,8 @@ log.info """\
          .stripIndent()
 
 numbers = Channel.from(9543..9545)
+// Note that reading from a file is preferable to hand-editing, e.g.
+// numbers = Channel.fromPath("path/to/input.txt")
 
 process square {
 
