@@ -1,8 +1,10 @@
 #! /usr/bin/env nextflow
 
-version='1.0'
-date='2023-04-04'
+version='2.0'
+date='2024-05-22'
 author="Natasha Hurley-Walker"
+
+nextflow.enable.dsl=2
 
 log.info """\
          Super basic Nextflow example
@@ -15,17 +17,28 @@ log.info """\
          """
          .stripIndent()
 
-numbers = Channel.from(9543..9545)
-// Note that reading from a file is preferable to hand-editing, e.g.
-// numbers = Channel.fromPath("path/to/input.txt")
+workflow {
+    // Define the numbers channel
+    numbers = Channel.of(9543..9545)
+    // Note that reading from a file is preferable to hand-editing, e.g.
+    // numbers = Channel.fromPath("path/to/input.txt")
+
+    // Execute the square process
+    // Note the use of collect in order to receive all three of the outputs of this process
+    resultFiles = square(numbers).collect()
+
+    // Execute the concatenate process
+    concatenate(resultFiles)
+
+}
 
 process square {
 
         input:
-        val(number) from numbers
+        val number
 
         output:
-        file("result_${number}.txt") into results
+        file("result_${number}.txt")
 
         script:
         """
@@ -36,13 +49,14 @@ process square {
 process concatenate {
 
         input:
-        file results_txt from results.collect()
+        file resultFile
 
+        // obviously terrible -- should be defined on the command line or in a parameter file
         output:
         file("results.txt")
 
         script:
         """
-        cat ${results_txt} >> ${params.output_dir}/results.txt
+        cat ${resultFile} >> ${params.output_dir}/results.txt
         """
 }
