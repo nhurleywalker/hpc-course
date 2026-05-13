@@ -6,8 +6,8 @@
 #SBATCH --ntasks=12
 #SBATCH -p work
 
-module load python/3.10.10
-module load py-mpi4py/3.1.4-py3.10.10
+module load python/3.11.6
+module load py-mpi4py/4.0.1-py3.11.6
 
 set -ex
 srun -n 12 python hello.py
